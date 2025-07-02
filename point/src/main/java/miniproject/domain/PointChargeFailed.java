@@ -16,6 +16,8 @@ public class PointChargeFailed extends AbstractEvent {
 
     public PointChargeFailed(Point aggregate) {
         super(aggregate);
+        this.userId = aggregate.getUserId();
+        this.amount = aggregate.getAmount();
     }
 
     public PointChargeFailed() {

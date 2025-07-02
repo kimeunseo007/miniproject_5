@@ -7,5 +7,5 @@ import lombok.Data;
 @Data
 public class CancelSubscriptionCommand {
 
-    private String userId;
+    private Long userId;
 }

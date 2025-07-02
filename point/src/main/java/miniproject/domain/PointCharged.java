@@ -16,6 +16,8 @@ public class PointCharged extends AbstractEvent {
 
     public PointCharged(Point aggregate) {
         super(aggregate);
+        this.userId = aggregate.getUserId();
+        this.amount = aggregate.getAmount();
     }
 
     public PointCharged() {

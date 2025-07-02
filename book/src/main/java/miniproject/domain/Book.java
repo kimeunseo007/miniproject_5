@@ -10,16 +10,21 @@ import miniproject.BookApplication;
 @Data
 public class Book {
 
+    public static final String STATUS_WRITTEN = "작성됨";
+    public static final String STATUS_DELETED = "삭제됨";
+    public static final String STATUS_PUBLISH_REQUESTED = "출간요청";
+    public static final String STATUS_PUBLISHED = "출간완료";
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long bookId;
-
     private String title;
     private String content;
     private String writerNickname;
     private Long writerId;
     private String coverUrl;
     private String status;
+    private Integer viewCount = 0;
 
     public static BookRepository repository() {
         return BookApplication.applicationContext.getBean(BookRepository.class);
@@ -31,7 +36,7 @@ public class Book {
         this.content = command.getContent();
         this.writerId = command.getWriterId();
         this.writerNickname = command.getWriterNickname();
-        this.status = "작성됨";
+        this.status = Book.STATUS_WRITTEN;
 
         Written written = new Written(this);
         written.publishAfterCommit();
@@ -48,7 +53,7 @@ public class Book {
 
     // 책 삭제
     public void delete(DeleteCommand command) {
-        this.status = "삭제됨";
+        this.status = Book.STATUS_DELETED;
 
         Deleted deleted = new Deleted(this);
         deleted.publishAfterCommit();
@@ -56,7 +61,7 @@ public class Book {
 
     // 출간 요청
     public void publishRequest(PublishRequestCommand command) {
-        this.status = "출간요청";
+        this.status = Book.STATUS_PUBLISHED;
 
         PublishRequested requested = new PublishRequested(this);
         requested.publishAfterCommit();
@@ -72,7 +77,10 @@ public class Book {
 
     // 책 조회 기록
     public void viewBook(ViewBookCommand command) {
+        this.viewCount++; // ✅ 조회수 증가
+
         BookViewed viewed = new BookViewed(this);
+        viewed.setUserId(command.getUserId()); // ✅ userId 세팅
         viewed.publishAfterCommit();
     }
 

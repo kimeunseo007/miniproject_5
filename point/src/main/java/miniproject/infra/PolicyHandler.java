@@ -1,10 +1,7 @@
 package miniproject.infra;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import javax.naming.NameParser;
-import javax.naming.NameParser;
 import javax.transaction.Transactional;
+
 import miniproject.config.kafka.KafkaProcessor;
 import miniproject.domain.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +9,6 @@ import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
-//<<< Clean Arch / Inbound Adaptor
 @Service
 @Transactional
 public class PolicyHandler {
@@ -23,6 +19,7 @@ public class PolicyHandler {
     @StreamListener(KafkaProcessor.INPUT)
     public void whatever(@Payload String eventString) {}
 
+    // 📌 BookAccessDenied 이벤트 수신 → checkPoint() 실행
     @StreamListener(
         value = KafkaProcessor.INPUT,
         condition = "headers['type']=='BookAccessDenied'"
@@ -30,15 +27,11 @@ public class PolicyHandler {
     public void wheneverBookAccessDenied_CheckPoint(
         @Payload BookAccessDenied bookAccessDenied
     ) {
-        BookAccessDenied event = bookAccessDenied;
-        System.out.println(
-            "\n\n##### listener CheckPoint : " + bookAccessDenied + "\n\n"
-        );
-
-        // Sample Logic //
-        Point.checkPoint(event);
+        System.out.println("##### listener CheckPoint : " + bookAccessDenied);
+        Point.checkPoint(bookAccessDenied);
     }
 
+    // 📌 외부 포인트 충전 요청 이벤트 수신 → chargePoint() 실행
     @StreamListener(
         value = KafkaProcessor.INPUT,
         condition = "headers['type']=='PointChargeRequested'"
@@ -46,13 +39,7 @@ public class PolicyHandler {
     public void wheneverPointChargeRequested_ChargePoint(
         @Payload PointChargeRequested pointChargeRequested
     ) {
-        PointChargeRequested event = pointChargeRequested;
-        System.out.println(
-            "\n\n##### listener ChargePoint : " + pointChargeRequested + "\n\n"
-        );
-
-        // Sample Logic //
-        Point.chargePoint(event);
+        System.out.println("##### listener ChargePoint : " + pointChargeRequested);
+        Point.chargePoint(pointChargeRequested);
     }
 }
-//>>> Clean Arch / Inbound Adaptor

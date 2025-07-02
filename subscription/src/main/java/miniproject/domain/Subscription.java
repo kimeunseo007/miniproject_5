@@ -1,11 +1,8 @@
 package miniproject.domain;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
-import java.util.Collections;
+import java.time.ZoneId;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import javax.persistence.*;
 import lombok.Data;
 import miniproject.SubscriptionApplication;
@@ -13,140 +10,98 @@ import miniproject.SubscriptionApplication;
 @Entity
 @Table(name = "Subscription_table")
 @Data
-//<<< DDD / Aggregate Root
 public class Subscription {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long userId;
 
-    private String subscriptionStatus;
-
+    private String subscriptionStatus; // SUBSCRIBED / CANCELED
     private Date subscriptionExpiryDate;
 
     public static SubscriptionRepository repository() {
-        SubscriptionRepository subscriptionRepository = SubscriptionApplication.applicationContext.getBean(
-            SubscriptionRepository.class
+        return SubscriptionApplication.applicationContext.getBean(SubscriptionRepository.class);
+    }
+
+    // 구독 등록
+    public void subscriptionRegister(SubscriptionRegisterCommand command) {
+        this.subscriptionStatus = "SUBSCRIBED";
+        this.subscriptionExpiryDate = Date.from(
+            LocalDate.now().plusDays(30).atStartOfDay(ZoneId.systemDefault()).toInstant()
         );
-        return subscriptionRepository;
+
+        SubscriptionRegistered event = new SubscriptionRegistered(this);
+        event.publishAfterCommit();
     }
 
-    //<<< Clean Arch / Port Method
-    public void checkSubscription(
-        CheckSubscriptionCommand checkSubscriptionCommand
-    ) {
-        //implement business logic here:
-
-        BookAccessGranted bookAccessGranted = new BookAccessGranted(this);
-        bookAccessGranted.publishAfterCommit();
-        BookAccessDenied bookAccessDenied = new BookAccessDenied(this);
-        bookAccessDenied.publishAfterCommit();
-    }
-
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public void subscriptionRegister(
-        SubscriptionRegisterCommand subscriptionRegisterCommand
-    ) {
-        //implement business logic here:
-
-        SubscriptionRegistered subscriptionRegistered = new SubscriptionRegistered(
-            this
+    // 구독 취소
+    public void subscriptionCancel(SubscriptionCancelCommand command) {
+        this.subscriptionStatus = "CANCELED";
+        this.subscriptionExpiryDate = Date.from(
+            LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()
         );
-        subscriptionRegistered.publishAfterCommit();
+
+        SubscriptionCanceled event = new SubscriptionCanceled(this);
+        event.publishAfterCommit();
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public void subscriptionCancel(
-        SubscriptionCancelCommand subscriptionCancelCommand
-    ) {
-        //implement business logic here:
+    // 구독 상태 확인 → 책 열람 허용 여부 판단 (BookViewed 이벤트 대응)
+    public void checkSubscription(CheckSubscriptionCommand command) {
+        Date now = new Date();
 
-        SubscriptionCanceled subscriptionCanceled = new SubscriptionCanceled(
-            this
-        );
-        subscriptionCanceled.publishAfterCommit();
+        if ("SUBSCRIBED".equals(this.subscriptionStatus) &&
+            this.subscriptionExpiryDate != null &&
+            this.subscriptionExpiryDate.after(now)) {
+
+            BookAccessGranted granted = new BookAccessGranted(this);
+            granted.publishAfterCommit();
+
+        } else {
+            BookAccessDenied denied = new BookAccessDenied(this);
+            denied.publishAfterCommit();
+        }
     }
 
-    //>>> Clean Arch / Port Method
+    // ✅ 포인트 열람 시에도 구독 상태 확인 → 책 열람 허용 여부 판단 (PointDeducted 이벤트 대응)
+    public static void checkSubscription(PointDeducted event) {
+        Long userId = event.getUserId();
+        Date now = new Date();
 
-    //<<< Clean Arch / Port Method
-    public static void subscribe(SubscriptionRequested subscriptionRequested) {
-        //implement business logic here:
+        repository().findByUserId(userId).ifPresentOrElse(subscription -> {
+            if ("SUBSCRIBED".equals(subscription.getSubscriptionStatus()) &&
+                subscription.getSubscriptionExpiryDate() != null &&
+                subscription.getSubscriptionExpiryDate().after(now)) {
 
-        /** Example 1:  new item 
-        Subscription subscription = new Subscription();
-        repository().save(subscription);
+                BookAccessGranted granted = new BookAccessGranted();
+                granted.setUserId(userId);
+                granted.setBookId(event.getBookId());
+                granted.publishAfterCommit();
 
-        */
-
-        /** Example 2:  finding and process
-        
-
-        repository().findById(subscriptionRequested.get???()).ifPresent(subscription->{
-            
-            subscription // do something
-            repository().save(subscription);
-
-
-         });
-        */
-
+            } else {
+                BookAccessDenied denied = new BookAccessDenied();
+                denied.setUserId(userId);
+                denied.setBookId(event.getBookId());
+                denied.publishAfterCommit();
+            }
+        }, () -> {
+            BookAccessDenied denied = new BookAccessDenied();
+            denied.setUserId(userId);
+            denied.setBookId(event.getBookId());
+            denied.publishAfterCommit();
+        });
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public static void checkSubscription(BookViewed bookViewed) {
-        //implement business logic here:
-
-        /** Example 1:  new item 
-        Subscription subscription = new Subscription();
-        repository().save(subscription);
-
-        */
-
-        /** Example 2:  finding and process
-        
-
-        repository().findById(bookViewed.get???()).ifPresent(subscription->{
-            
-            subscription // do something
-            repository().save(subscription);
-
-
-         });
-        */
-
+    // PointDeducted 이벤트 처리용 구독 상태 확인
+    public static void checkSubscription(PointDeducted event) {
+        repository().findById(event.getUserId()).ifPresent(subscription -> {
+            subscription.checkSubscription(new CheckSubscriptionCommand());
+        });
     }
-
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public static void subscriptionCancel(
-        SubscriptionCancelRequested subscriptionCancelRequested
-    ) {
-        //implement business logic here:
-
-        /** Example 1:  new item 
-        Subscription subscription = new Subscription();
-        repository().save(subscription);
-
-        */
-
-        /** Example 2:  finding and process
-        
-
-        repository().findById(subscriptionCancelRequested.get???()).ifPresent(subscription->{
-            
-            subscription // do something
-            repository().save(subscription);
-
-
-         });
-        */
-
+    
+    // D-Day 계산 (ViewHandler 등에서 사용)
+    public long calculateDDay() {
+        if (this.subscriptionExpiryDate == null) return Long.MIN_VALUE;
+        LocalDate now = LocalDate.now();
+        LocalDate expiry = subscriptionExpiryDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return java.time.temporal.ChronoUnit.DAYS.between(now, expiry);
     }
-    //>>> Clean Arch / Port Method
-
 }
-//>>> DDD / Aggregate Root

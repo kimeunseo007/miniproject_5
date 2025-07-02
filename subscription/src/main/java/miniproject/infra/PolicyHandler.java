@@ -1,9 +1,5 @@
 package miniproject.infra;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import javax.naming.NameParser;
-import javax.naming.NameParser;
 import javax.transaction.Transactional;
 import miniproject.config.kafka.KafkaProcessor;
 import miniproject.domain.*;
@@ -12,7 +8,6 @@ import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
-//<<< Clean Arch / Inbound Adaptor
 @Service
 @Transactional
 public class PolicyHandler {
@@ -30,13 +25,10 @@ public class PolicyHandler {
     public void wheneverSubscriptionRequested_Subscribe(
         @Payload SubscriptionRequested subscriptionRequested
     ) {
-        SubscriptionRequested event = subscriptionRequested;
         System.out.println(
             "\n\n##### listener Subscribe : " + subscriptionRequested + "\n\n"
         );
-
-        // Sample Logic //
-        Subscription.subscribe(event);
+        Subscription.subscribe(subscriptionRequested);
     }
 
     @StreamListener(
@@ -46,13 +38,10 @@ public class PolicyHandler {
     public void wheneverBookViewed_CheckSubscription(
         @Payload BookViewed bookViewed
     ) {
-        BookViewed event = bookViewed;
         System.out.println(
             "\n\n##### listener CheckSubscription : " + bookViewed + "\n\n"
         );
-
-        // Sample Logic //
-        Subscription.checkSubscription(event);
+        Subscription.checkSubscription(bookViewed);
     }
 
     @StreamListener(
@@ -62,15 +51,26 @@ public class PolicyHandler {
     public void wheneverSubscriptionCancelRequested_SubscriptionCancel(
         @Payload SubscriptionCancelRequested subscriptionCancelRequested
     ) {
-        SubscriptionCancelRequested event = subscriptionCancelRequested;
         System.out.println(
             "\n\n##### listener SubscriptionCancel : " +
             subscriptionCancelRequested +
             "\n\n"
         );
+        Subscription.subscriptionCancel(subscriptionCancelRequested);
+    }
 
-        // Sample Logic //
-        Subscription.subscriptionCancel(event);
+    @StreamListener(
+        value = KafkaProcessor.INPUT,
+        condition = "headers['type']=='PointDeducted'"
+    )
+    public void wheneverPointDeducted_CheckSubscription(
+        @Payload PointDeducted pointDeducted
+    ) {
+        System.out.println(
+            "\n\n##### listener CheckSubscription (Point) : " +
+            pointDeducted +
+            "\n\n"
+        );
+        Subscription.checkSubscription(pointDeducted);
     }
 }
-//>>> Clean Arch / Inbound Adaptor

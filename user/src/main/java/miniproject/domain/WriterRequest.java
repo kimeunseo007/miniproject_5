@@ -13,8 +13,4 @@ public class WriterRequest extends AbstractEvent {
         super(aggregate);
         this.userId = aggregate.getUserId();
     }
-
-    public WriterRequest() {
-        super();
-    }
 }

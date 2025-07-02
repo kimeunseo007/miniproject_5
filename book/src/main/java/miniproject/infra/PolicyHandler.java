@@ -54,5 +54,21 @@ public class PolicyHandler {
         // Sample Logic //
         Book.coverCandidatesReady(event);
     }
+    @StreamListener(
+    value = KafkaProcessor.INPUT,
+    condition = "headers['type']=='BookAccessGranted'"
+    )
+    public void wheneverBookAccessGranted_ViewBook(@Payload BookAccessGranted bookAccessGranted) {
+        BookAccessGranted event = bookAccessGranted;
+        System.out.println("\n\n##### listener ViewBook : " + event + "\n\n");
+
+        bookRepository.findById(event.getBookId()).ifPresent(book -> {
+            ViewBookCommand command = new ViewBookCommand();
+            command.setBookId(event.getBookId());
+            command.setWriterId(book.getWriterId());
+            book.viewBook(command);
+            bookRepository.save(book);
+        });
+    }
 }
 //>>> Clean Arch / Inbound Adaptor

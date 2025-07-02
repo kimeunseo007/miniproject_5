@@ -1,8 +1,6 @@
 package miniproject.domain;
 
-import java.util.*;
 import lombok.*;
-import miniproject.domain.*;
 import miniproject.infra.AbstractEvent;
 
 @Data
@@ -10,4 +8,15 @@ import miniproject.infra.AbstractEvent;
 public class WriterRequest extends AbstractEvent {
 
     private Long userId;
+
+    public WriterRequest(User aggregate) {
+        super(aggregate);
+        this.userId = aggregate.getUserId();
+    }
+
+    public WriterRequest() {
+        super();
+    }
 }
+
+

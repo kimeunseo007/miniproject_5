@@ -16,6 +16,8 @@ public class BookViewIncreased extends AbstractEvent {
 
     public BookViewIncreased(BestSeller aggregate) {
         super(aggregate);
+        this.bookId = aggregate.getBookId();
+        this.viewCount = aggregate.getViewCount();
     }
 
     public BookViewIncreased() {

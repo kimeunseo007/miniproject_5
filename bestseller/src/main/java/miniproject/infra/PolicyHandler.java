@@ -54,5 +54,15 @@ public class PolicyHandler {
         // Sample Logic //
         BestSeller.viewCount(event);
     }
+    @StreamListener(
+    value = KafkaProcessor.INPUT,
+    condition = "headers['type']=='BookViewed'"
+    )
+    public void wheneverBookViewed_ViewCount(@Payload BookViewed bookViewed) {
+        BookViewed event = bookViewed;
+        System.out.println("\n\n##### listener ViewCount : " + bookViewed + "\n\n");
+
+        BestSeller.viewCount(event);
+    }
 }
 //>>> Clean Arch / Inbound Adaptor

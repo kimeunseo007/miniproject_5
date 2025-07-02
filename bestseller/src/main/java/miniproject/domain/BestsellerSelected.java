@@ -12,13 +12,9 @@ import miniproject.infra.AbstractEvent;
 public class BestsellerSelected extends AbstractEvent {
 
     private Long bestsellerId;
-    private String bookId;
+    private Long bookId;  // 수정: Long으로 변경
     private Integer viewCount;
     private String selectedStatus;
-    private Date selectedAt;
-    private String title;
-    private String coverUrl;
-    private Long writerId;
     private Date selectedAt;
     private String title;
     private String coverUrl;
@@ -26,6 +22,14 @@ public class BestsellerSelected extends AbstractEvent {
 
     public BestsellerSelected(BestSeller aggregate) {
         super(aggregate);
+        this.bestsellerId = aggregate.getBestsellerId();
+        this.bookId = aggregate.getBookId();
+        this.viewCount = aggregate.getViewCount();
+        this.selectedStatus = aggregate.getSelectedStatus();
+        this.selectedAt = aggregate.getSelectedAt();
+        this.title = aggregate.getTitle();
+        this.coverUrl = aggregate.getCoverUrl();
+        this.writerId = aggregate.getWriterId();
     }
 
     public BestsellerSelected() {

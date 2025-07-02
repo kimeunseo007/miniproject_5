@@ -19,10 +19,11 @@ public class SubscriptionRequested extends AbstractEvent {
 
     public SubscriptionRequested(User aggregate) {
         super(aggregate);
-    }
-
-    public SubscriptionRequested() {
-        super();
+        this.userId = aggregate.getUserId();
+        this.email = aggregate.getEmail();
+        this.nickname = aggregate.getNickname();
+        this.subscribed = "subscribed".equals(aggregate.getSubscriptionStatus());
+        this.writerRequested = aggregate.getIsWriter();
     }
 }
 //>>> DDD / Domain Event

@@ -1,11 +1,7 @@
 package miniproject.domain;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import javax.persistence.*;
 import lombok.Data;
 import miniproject.PointApplication;
@@ -23,84 +19,105 @@ public class Point {
     private Integer amount;
 
     public static PointRepository repository() {
-        PointRepository pointRepository = PointApplication.applicationContext.getBean(
-            PointRepository.class
-        );
-        return pointRepository;
+        return PointApplication.applicationContext.getBean(PointRepository.class);
     }
 
-    //<<< Clean Arch / Port Method
+    // 포인트 차감 처리
     public void deductPoint(DeductPointCommand deductPointCommand) {
-        //implement business logic here:
-
-        PointDeducted pointDeducted = new PointDeducted(this);
-        pointDeducted.publishAfterCommit();
-        PointDeductFailed pointDeductFailed = new PointDeductFailed(this);
-        pointDeductFailed.publishAfterCommit();
+        if (this.amount >= deductPointCommand.getAmount()) {
+            this.amount -= deductPointCommand.getAmount();
+            PointDeducted pointDeducted = new PointDeducted(this);
+            pointDeducted.setBookId(deductPointCommand.getBookId());
+            pointDeducted.setAmount(deductPointCommand.getAmount());
+            pointDeducted.publishAfterCommit();
+        } else {
+            PointDeductFailed pointDeductFailed = new PointDeductFailed(this);
+            pointDeductFailed.publishAfterCommit();
+        }
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
+    // 포인트 충전 처리
     public void chargePoint(ChargePointCommand chargePointCommand) {
-        //implement business logic here:
-
-        PointCharged pointCharged = new PointCharged(this);
-        pointCharged.publishAfterCommit();
-        PointChargeFailed pointChargeFailed = new PointChargeFailed(this);
-        pointChargeFailed.publishAfterCommit();
+        if (chargePointCommand.getAmount() > 0) {
+            this.amount += chargePointCommand.getAmount();
+            PointCharged pointCharged = new PointCharged(this);
+            pointCharged.publishAfterCommit();
+        } else {
+            PointChargeFailed pointChargeFailed = new PointChargeFailed(this);
+            pointChargeFailed.publishAfterCommit();
+        }
     }
 
-    //>>> Clean Arch / Port Method
+    // 포인트 기반 책 열람 허용 판단
+    public static void checkSubscription(PointDeducted event) {
+        Long userId = event.getUserId();
+        Integer requestedAmount = event.getAmount();
 
-    //<<< Clean Arch / Port Method
-    public static void checkPoint(BookAccessDenied bookAccessDenied) {
-        //implement business logic here:
-
-        /** Example 1:  new item 
-        Point point = new Point();
-        repository().save(point);
-
-        */
-
-        /** Example 2:  finding and process
-        
-
-        repository().findById(bookAccessDenied.get???()).ifPresent(point->{
-            
-            point // do something
-            repository().save(point);
-
-
-         });
-        */
-
+        // 포인트가 충분한지 여부 확인하는 메서드로 분리
+        if (hasSufficientPoints(userId, requestedAmount)) {
+            BookAccessGranted granted = new BookAccessGranted();
+            granted.setUserId(userId);
+            granted.setBookId(event.getBookId());
+            granted.publishAfterCommit();
+        } else {
+            BookAccessDenied denied = new BookAccessDenied();
+            denied.setUserId(userId);
+            denied.setBookId(event.getBookId());
+            denied.publishAfterCommit();
+        }
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
+    private static boolean hasSufficientPoints(Long userId, Integer requestedAmount) {
+        return repository().findById(userId)
+            .map(point -> point.getAmount() != null && point.getAmount() >= requestedAmount)
+            .orElse(false);
+    }
+
+    // ✅ BookAccessDenied 이벤트 수신 → 포인트 차감 시도
+    public static void checkPoint(BookAccessDenied event) {
+        Long userId = event.getUserId();
+        Long bookId = event.getBookId();
+
+        repository().findById(userId).ifPresentOrElse(point -> {
+            if (point.getAmount() != null && point.getAmount() >= 100) { // 책 한 권당 100포인트
+                DeductPointCommand command = new DeductPointCommand();
+                command.setUserId(userId);
+                command.setAmount(100);
+                command.setBookId(bookId);
+                point.deductPoint(command);
+                repository().save(point);
+            } else {
+                PointDeductFailed failed = new PointDeductFailed(point);
+                failed.publishAfterCommit();
+            }
+        }, () -> {
+            PointDeductFailed failed = new PointDeductFailed();
+            failed.setUserId(userId);
+            failed.setAmount(0);
+            failed.publishAfterCommit();
+        });
+    }
+
+    // 외부에서 포인트 충전 요청 처리
     public static void chargePoint(PointChargeRequested pointChargeRequested) {
-        //implement business logic here:
+        Long userId = pointChargeRequested.getUserId();
+        Integer chargeAmount = pointChargeRequested.getAmount();
 
-        /** Example 1:  new item 
-        Point point = new Point();
-        repository().save(point);
-
-        */
-
-        /** Example 2:  finding and process
-        
-
-        repository().findById(pointChargeRequested.get???()).ifPresent(point->{
-            
-            point // do something
-            repository().save(point);
-
-
-         });
-        */
-
+        repository().findById(userId).ifPresentOrElse(
+            point -> {
+                point.setAmount(point.getAmount() + chargeAmount);
+                repository().save(point);
+                PointCharged event = new PointCharged(point);
+                event.publishAfterCommit();
+            },
+            () -> {
+                Point newPoint = new Point();
+                newPoint.setUserId(userId);
+                newPoint.setAmount(chargeAmount);
+                repository().save(newPoint);
+                PointCharged event = new PointCharged(newPoint);
+                event.publishAfterCommit();
+            }
+        );
     }
-    //>>> Clean Arch / Port Method
-
 }
-//>>> DDD / Aggregate Root

@@ -15,10 +15,7 @@ public class SubscriptionCancelRequested extends AbstractEvent {
 
     public SubscriptionCancelRequested(User aggregate) {
         super(aggregate);
-    }
-
-    public SubscriptionCancelRequested() {
-        super();
+        this.userId = aggregate.getUserId();  // 필드 초기화 추가!
     }
 }
 //>>> DDD / Domain Event

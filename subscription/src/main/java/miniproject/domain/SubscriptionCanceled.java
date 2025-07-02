@@ -16,6 +16,8 @@ public class SubscriptionCanceled extends AbstractEvent {
 
     public SubscriptionCanceled(Subscription aggregate) {
         super(aggregate);
+        this.userId = aggregate.getUserId();
+        this.subscriptionStatus = aggregate.getSubscriptionStatus();
     }
 
     public SubscriptionCanceled() {

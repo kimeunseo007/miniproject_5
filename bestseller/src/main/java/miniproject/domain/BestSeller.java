@@ -1,11 +1,6 @@
 package miniproject.domain;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import javax.persistence.*;
 import lombok.Data;
 import miniproject.BestsellerApplication;
@@ -13,100 +8,60 @@ import miniproject.BestsellerApplication;
 @Entity
 @Table(name = "BestSeller_table")
 @Data
-//<<< DDD / Aggregate Root
 public class BestSeller {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long bestsellerId;
 
-    private String bookId;
-
-    private Integer viewCount;
-
-    private String selectedStatus;
-
-    private Date selectedAt;
+    private Long bookId; // 책 ID
+    private Integer viewCount; // 조회수
+    private String selectedStatus; // 베스트셀러 여부
+    private Date selectedAt; // 선정일시
 
     public static BestSellerRepository repository() {
-        BestSellerRepository bestSellerRepository = BestsellerApplication.applicationContext.getBean(
-            BestSellerRepository.class
+        return BestsellerApplication.applicationContext.getBean(BestSellerRepository.class);
+    }
+
+    // 🔁 공통 처리 로직
+    private static void processViewCount(Long bookId) {
+        repository().findByBookId(bookId).ifPresentOrElse(
+            bestseller -> {
+                int current = bestseller.getViewCount() != null ? bestseller.getViewCount() : 0;
+                bestseller.setViewCount(current + 1);
+
+                if (bestseller.getViewCount() >= 5 && bestseller.getSelectedStatus() == null) {
+                    bestseller.setSelectedStatus("베스트셀러");
+                    bestseller.setSelectedAt(new Date());
+
+                    BestsellerSelected selected = new BestsellerSelected(bestseller);
+                    selected.publishAfterCommit();
+                }
+
+                repository().save(bestseller);
+            },
+            () -> {
+                BestSeller newOne = new BestSeller();
+                newOne.setBookId(bookId);
+                newOne.setViewCount(1);
+                repository().save(newOne);
+            }
         );
-        return bestSellerRepository;
     }
 
-    //<<< Clean Arch / Port Method
-    public void increaseBookView(
-        IncreaseBookViewCommand increaseBookViewCommand
-    ) {
-        //implement business logic here:
-
-        BookViewIncreased bookViewIncreased = new BookViewIncreased(this);
-        bookViewIncreased.publishAfterCommit();
+    public static void handleEvent(Long bookId) {
+        processViewCount(bookId); // 조회수 처리 및 베스트셀러 선정
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public void selectBestSeller(
-        SelectBestSellerCommand selectBestSellerCommand
-    ) {
-        //implement business logic here:
-
-        BestsellerSelected bestsellerSelected = new BestsellerSelected(this);
-        bestsellerSelected.publishAfterCommit();
+    public static void viewCount(BookAccessGranted event) {
+        handleEvent(event.getBookId());
     }
 
-    //>>> Clean Arch / Port Method
-
-    //<<< Clean Arch / Port Method
-    public static void viewCount(BookAccessGranted bookAccessGranted) {
-        //implement business logic here:
-
-        /** Example 1:  new item 
-        BestSeller bestSeller = new BestSeller();
-        repository().save(bestSeller);
-
-        */
-
-        /** Example 2:  finding and process
-        
-
-        repository().findById(bookAccessGranted.get???()).ifPresent(bestSeller->{
-            
-            bestSeller // do something
-            repository().save(bestSeller);
-
-
-         });
-        */
-
+    public static void viewCount(PointDeducted event) {
+        handleEvent(event.getBookId());
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public static void viewCount(PointDeducted pointDeducted) {
-        //implement business logic here:
-
-        /** Example 1:  new item 
-        BestSeller bestSeller = new BestSeller();
-        repository().save(bestSeller);
-
-        */
-
-        /** Example 2:  finding and process
-        
-
-        repository().findById(pointDeducted.get???()).ifPresent(bestSeller->{
-            
-            bestSeller // do something
-            repository().save(bestSeller);
-
-
-         });
-        */
-
+    public static void viewCount(BookViewed event) {
+        handleEvent(event.getBookId());
     }
-    //>>> Clean Arch / Port Method
-
 }
-//>>> DDD / Aggregate Root

@@ -18,6 +18,9 @@ public class CoverCreated extends AbstractEvent {
 
     public CoverCreated(OpenAi aggregate) {
         super(aggregate);
+        this.bookId = aggregate.getBookId();
+        this.coverUrl = aggregate.getCoverUrl();
+        this.requestId = generateRequestId();  // 고유 요청 ID 생성 (예시)
     }
 
     public CoverCreated() {

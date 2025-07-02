@@ -1,5 +1,6 @@
 package miniproject.infra;
 
+import java.util.List;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -7,13 +8,8 @@ import javax.transaction.Transactional;
 import miniproject.domain.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-//<<< Clean Arch / Inbound Adaptor
 
 @RestController
-// @RequestMapping(value="/bestSellers")
 @Transactional
 public class BestSellerController {
 
@@ -32,9 +28,7 @@ public class BestSellerController {
         HttpServletResponse response
     ) throws Exception {
         System.out.println("##### /bestSeller/increaseBookView  called #####");
-        Optional<BestSeller> optionalBestSeller = bestSellerRepository.findById(
-            id
-        );
+        Optional<BestSeller> optionalBestSeller = bestSellerRepository.findById(id);
 
         optionalBestSeller.orElseThrow(() -> new Exception("No Entity Found"));
         BestSeller bestSeller = optionalBestSeller.get();
@@ -56,9 +50,7 @@ public class BestSellerController {
         HttpServletResponse response
     ) throws Exception {
         System.out.println("##### /bestSeller/selectBestSeller  called #####");
-        Optional<BestSeller> optionalBestSeller = bestSellerRepository.findById(
-            id
-        );
+        Optional<BestSeller> optionalBestSeller = bestSellerRepository.findById(id);
 
         optionalBestSeller.orElseThrow(() -> new Exception("No Entity Found"));
         BestSeller bestSeller = optionalBestSeller.get();
@@ -67,5 +59,10 @@ public class BestSellerController {
         bestSellerRepository.save(bestSeller);
         return bestSeller;
     }
+
+    // ✅ 추가: 조회수 5 이상 + 베스트셀러만 조회
+    @GetMapping("/bestSellers/viewover5")
+    public List<BestSeller> getBooksViewOver5() {
+        return bestSellerRepository.findByViewCountGreaterThanEqualAndSelectedStatus(5, "베스트셀러");
+    }
 }
-//>>> Clean Arch / Inbound Adaptor

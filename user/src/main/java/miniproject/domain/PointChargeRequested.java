@@ -16,10 +16,9 @@ public class PointChargeRequested extends AbstractEvent {
 
     public PointChargeRequested(User aggregate) {
         super(aggregate);
+        this.userId = aggregate.getUserId();
+        this.amount = aggregate.getPoint();
     }
 
-    public PointChargeRequested() {
-        super();
-    }
 }
 //>>> DDD / Domain Event

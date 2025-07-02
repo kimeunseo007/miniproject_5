@@ -38,12 +38,17 @@ public class User {
         event.publishAfterCommit();
     }
 
-    // 작가 요청
+    // 작가 요청 (승인되기 전까진 isWriter false)
     public void writerQuest(WriterQuestCommand command) {
-        this.isWriter = true;
-
+        // isWriter = true 는 writer 서비스에서 승인된 후 처리해야 함!
         WriterRequest event = new WriterRequest(this);
         event.publishAfterCommit();
+    }
+
+    // 작가 승인 처리 (writer 서비스에서 승인 이벤트 수신 시)
+    public void approveWriter() {
+        this.isWriter = true;
+        // 별도 이벤트 발행은 writer 서비스에서 처리
     }
 
     // 구독 요청

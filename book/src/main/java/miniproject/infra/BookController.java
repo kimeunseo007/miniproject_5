@@ -77,9 +77,9 @@ public class BookController {
     }
 
     @RequestMapping(
-        value = "/books/{id}/viewbook",
-        method = RequestMethod.PUT,
-        produces = "application/json;charset=UTF-8"
+    value = "/books/{id}/viewbook",
+    method = RequestMethod.PUT,
+    produces = "application/json;charset=UTF-8"
     )
     public Book viewBook(
         @PathVariable(value = "id") Long id,
@@ -93,6 +93,12 @@ public class BookController {
         optionalBook.orElseThrow(() -> new Exception("No Entity Found"));
         Book book = optionalBook.get();
         book.viewBook(viewBookCommand);
+
+        // ✅ Kafka 이벤트 발행: BookViewed
+        BookViewed bookViewed = new BookViewed(book);
+        bookViewed.setWriterId(book.getWriterId()); // writerId 설정
+        bookViewed.setUserId(viewBookCommand.getUserId()); // 필요 시 userId도 설정
+        bookViewed.publishAfterCommit();
 
         bookRepository.save(book);
         return book;

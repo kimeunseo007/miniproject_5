@@ -7,6 +7,6 @@ import lombok.Data;
 @Data
 public class ChargePointCommand {
 
-    private String userId;
+    private Long userId;
     private Integer amount;
 }

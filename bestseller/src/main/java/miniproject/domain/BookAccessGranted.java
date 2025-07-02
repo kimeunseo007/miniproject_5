@@ -10,4 +10,15 @@ import miniproject.infra.AbstractEvent;
 public class BookAccessGranted extends AbstractEvent {
 
     private Long userId;
+    private Long bookId;
+
+    public BookAccessGranted() {
+        super();
+    }
+
+    public BookAccessGranted(Long userId, Long bookId) {
+        super();
+        this.userId = userId;
+        this.bookId = bookId;
+    }
 }
