@@ -1,20 +1,13 @@
 package miniproject.domain;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import javax.persistence.*;
 import lombok.Data;
 import miniproject.BookApplication;
-import miniproject.domain.PublishCompleted;
 
 @Entity
 @Table(name = "Book_table")
 @Data
-//<<< DDD / Aggregate Root
 public class Book {
 
     @Id
@@ -22,149 +15,89 @@ public class Book {
     private Long bookId;
 
     private String title;
-
     private String content;
-
     private String writerNickname;
-
     private Long writerId;
-
     private String coverUrl;
-
     private String status;
 
     public static BookRepository repository() {
-        BookRepository bookRepository = BookApplication.applicationContext.getBean(
-            BookRepository.class
-        );
-        return bookRepository;
+        return BookApplication.applicationContext.getBean(BookRepository.class);
     }
 
-    //<<< Clean Arch / Port Method
-    public void write(WriteCommand writeCommand) {
-        //implement business logic here:
+    // 책 작성
+    public void write(WriteCommand command) {
+        this.title = command.getTitle();
+        this.content = command.getContent();
+        this.writerId = command.getWriterId();
+        this.writerNickname = command.getWriterNickname();
+        this.status = "작성됨";
 
         Written written = new Written(this);
         written.publishAfterCommit();
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public void delete(DeleteCommand deleteCommand) {
-        //implement business logic here:
-
-        Deleted deleted = new Deleted(this);
-        deleted.publishAfterCommit();
-    }
-
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public void publishRequest(PublishRequestCommand publishRequestCommand) {
-        //implement business logic here:
-
-        PublishRequested publishRequested = new PublishRequested(this);
-        publishRequested.publishAfterCommit();
-    }
-
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public void viewBook(ViewBookCommand viewBookCommand) {
-        //implement business logic here:
-
-        BookViewed bookViewed = new BookViewed(this);
-        bookViewed.publishAfterCommit();
-    }
-
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public void selectBookCover(SelectBookCoverCommand selectBookCoverCommand) {
-        //implement business logic here:
-
-        BookCoverSelected bookCoverSelected = new BookCoverSelected(this);
-        bookCoverSelected.publishAfterCommit();
-    }
-
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public void requestCoverGeneration(
-        RequestCoverGenerationCommand requestCoverGenerationCommand
-    ) {
-        //implement business logic here:
-
-        CoverGenerationRequested coverGenerationRequested = new CoverGenerationRequested(
-            this
-        );
-        coverGenerationRequested.publishAfterCommit();
-    }
-
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public void update(UpdateCommand updateCommand) {
-        //implement business logic here:
+    // 책 수정
+    public void update(UpdateCommand command) {
+        this.title = command.getTitle();
+        this.content = command.getContent();
 
         Updated updated = new Updated(this);
         updated.publishAfterCommit();
     }
 
-    //>>> Clean Arch / Port Method
+    // 책 삭제
+    public void delete(DeleteCommand command) {
+        this.status = "삭제됨";
 
-    //<<< Clean Arch / Port Method
-    public static void publishComplete(PubApproved pubApproved) {
-        //implement business logic here:
-
-        /** Example 1:  new item 
-        Book book = new Book();
-        repository().save(book);
-
-        PublishCompleted publishCompleted = new PublishCompleted(book);
-        publishCompleted.publishAfterCommit();
-        */
-
-        /** Example 2:  finding and process
-        
-
-        repository().findById(pubApproved.get???()).ifPresent(book->{
-            
-            book // do something
-            repository().save(book);
-
-            PublishCompleted publishCompleted = new PublishCompleted(book);
-            publishCompleted.publishAfterCommit();
-
-         });
-        */
-
+        Deleted deleted = new Deleted(this);
+        deleted.publishAfterCommit();
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public static void coverCandidatesReady(CoverCreated coverCreated) {
-        //implement business logic here:
+    // 출간 요청
+    public void publishRequest(PublishRequestCommand command) {
+        this.status = "출간요청";
 
-        /** Example 1:  new item 
-        Book book = new Book();
-        repository().save(book);
+        PublishRequested requested = new PublishRequested(this);
+        requested.publishAfterCommit();
+    }
 
-        */
+    // 표지 선택
+    public void selectBookCover(SelectBookCoverCommand command) {
+        this.coverUrl = command.getCoverUrl();
 
-        /** Example 2:  finding and process
-        
-        // if coverCreated.genAiId exists, use it
-        
-        // ObjectMapper mapper = new ObjectMapper();
-        // Map<, Object> openAiMap = mapper.convertValue(coverCreated.getGenAiId(), Map.class);
+        BookCoverSelected selected = new BookCoverSelected(this);
+        selected.publishAfterCommit();
+    }
 
-        repository().findById(coverCreated.get???()).ifPresent(book->{
-            
-            book // do something
+    // 책 조회 기록
+    public void viewBook(ViewBookCommand command) {
+        BookViewed viewed = new BookViewed(this);
+        viewed.publishAfterCommit();
+    }
+
+    // AI 표지 요청
+    public void requestCoverGeneration(RequestCoverGenerationCommand command) {
+        CoverGenerationRequested requested = new CoverGenerationRequested(this);
+        requested.publishAfterCommit();
+    }
+
+    // 출간 승인됨 → 상태 변경
+    public static void publishComplete(PubApproved event) {
+        repository().findById(event.getBookId()).ifPresent(book -> {
+            book.setStatus("출간완료");
             repository().save(book);
 
-
-         });
-        */
-
+            PublishCompleted completed = new PublishCompleted(book);
+            completed.publishAfterCommit();
+        });
     }
-    //>>> Clean Arch / Port Method
 
+    // 표지 생성 완료됨 → coverUrl 반영
+    public static void coverCandidatesReady(CoverCreated event) {
+        repository().findById(event.getBookId()).ifPresent(book -> {
+            book.setCoverUrl(event.getCoverUrl());
+            repository().save(book);
+        });
+    }
 }
-//>>> DDD / Aggregate Root

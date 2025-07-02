@@ -1,11 +1,6 @@
 package miniproject.domain;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
 import javax.persistence.*;
 import lombok.Data;
 import miniproject.UserApplication;
@@ -13,7 +8,6 @@ import miniproject.UserApplication;
 @Entity
 @Table(name = "User_table")
 @Data
-//<<< DDD / Aggregate Root
 public class User {
 
     @Id
@@ -21,70 +15,58 @@ public class User {
     private Long userId;
 
     private String email;
-
     private String nickname;
-
     private String passwordHash;
 
+    private Boolean isWriter = false;
+    private String subscriptionStatus = "none"; // none, subscribed
+    private Integer point = 0;
+    private LocalDateTime joinedAt;
+
     public static UserRepository repository() {
-        UserRepository userRepository = UserApplication.applicationContext.getBean(
-            UserRepository.class
-        );
-        return userRepository;
+        return UserApplication.applicationContext.getBean(UserRepository.class);
     }
 
-    //<<< Clean Arch / Port Method
-    public void register(RegisterCommand registerCommand) {
-        //implement business logic here:
+    // 회원가입
+    public void register(RegisterCommand command) {
+        this.email = command.getEmail();
+        this.nickname = command.getNickname();
+        this.passwordHash = command.getPasswordHash();
+        this.joinedAt = LocalDateTime.now();
 
-        Registered registered = new Registered(this);
-        registered.publishAfterCommit();
+        Registered event = new Registered(this);
+        event.publishAfterCommit();
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public void subscribe(SubscribeCommand subscribeCommand) {
-        //implement business logic here:
+    // 작가 요청
+    public void writerQuest(WriterQuestCommand command) {
+        this.isWriter = true;
 
-        SubscriptionRequested subscriptionRequested = new SubscriptionRequested(
-            this
-        );
-        subscriptionRequested.publishAfterCommit();
+        WriterRequest event = new WriterRequest(this);
+        event.publishAfterCommit();
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public void writerQuest(WriterQuestCommand writerQuestCommand) {
-        //implement business logic here:
+    // 구독 요청
+    public void subscribe(SubscribeCommand command) {
+        this.subscriptionStatus = "subscribed";
 
-        WriterRequest writerRequest = new WriterRequest(this);
-        writerRequest.publishAfterCommit();
+        SubscriptionRequested event = new SubscriptionRequested(this);
+        event.publishAfterCommit();
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public void cancelSubscription(
-        CancelSubscriptionCommand cancelSubscriptionCommand
-    ) {
-        //implement business logic here:
+    // 구독 취소 요청
+    public void cancelSubscription(CancelSubscriptionCommand command) {
+        this.subscriptionStatus = "none";
 
-        SubscriptionCancelRequested subscriptionCancelRequested = new SubscriptionCancelRequested(
-            this
-        );
-        subscriptionCancelRequested.publishAfterCommit();
+        SubscriptionCancelRequested event = new SubscriptionCancelRequested(this);
+        event.publishAfterCommit();
     }
 
-    //>>> Clean Arch / Port Method
-    //<<< Clean Arch / Port Method
-    public void chargePoint(ChargePointCommand chargePointCommand) {
-        //implement business logic here:
+    // 포인트 충전 요청
+    public void chargePoint(ChargePointCommand command) {
+        this.point += command.getAmount(); // 단순 누적
 
-        PointChargeRequested pointChargeRequested = new PointChargeRequested(
-            this
-        );
-        pointChargeRequested.publishAfterCommit();
+        PointChargeRequested event = new PointChargeRequested(this);
+        event.publishAfterCommit();
     }
-    //>>> Clean Arch / Port Method
-
 }
-//>>> DDD / Aggregate Root

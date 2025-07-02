@@ -4,130 +4,74 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
+
 import miniproject.domain.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-//<<< Clean Arch / Inbound Adaptor
 
 @RestController
-// @RequestMapping(value="/users")
+@RequestMapping("/users") // 상위 path 지정
 @Transactional
 public class UserController {
 
     @Autowired
     UserRepository userRepository;
 
-    @RequestMapping(
-        value = "/users/{id}/register",
-        method = RequestMethod.PUT,
-        produces = "application/json;charset=UTF-8"
-    )
+    // ✅ 회원가입은 POST로 처리
+    @PostMapping
     public User register(
-        @PathVariable(value = "id") Long id,
-        @RequestBody RegisterCommand registerCommand,
+        @RequestBody RegisterCommand command,
         HttpServletRequest request,
         HttpServletResponse response
-    ) throws Exception {
-        System.out.println("##### /user/register  called #####");
-        Optional<User> optionalUser = userRepository.findById(id);
+    ) {
+        System.out.println("##### /users POST register called #####");
+        User user = new User();
+        user.register(command);
 
-        optionalUser.orElseThrow(() -> new Exception("No Entity Found"));
-        User user = optionalUser.get();
-        user.register(registerCommand);
-
-        userRepository.save(user);
-        return user;
+        return userRepository.save(user);
     }
 
-    @RequestMapping(
-        value = "/users/{id}/subscribe",
-        method = RequestMethod.PUT,
-        produces = "application/json;charset=UTF-8"
-    )
+    @PutMapping("/{id}/subscribe")
     public User subscribe(
-        @PathVariable(value = "id") Long id,
-        @RequestBody SubscribeCommand subscribeCommand,
-        HttpServletRequest request,
-        HttpServletResponse response
+        @PathVariable Long id,
+        @RequestBody SubscribeCommand command
     ) throws Exception {
-        System.out.println("##### /user/subscribe  called #####");
-        Optional<User> optionalUser = userRepository.findById(id);
-
-        optionalUser.orElseThrow(() -> new Exception("No Entity Found"));
-        User user = optionalUser.get();
-        user.subscribe(subscribeCommand);
-
-        userRepository.save(user);
-        return user;
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new Exception("No User Found"));
+        user.subscribe(command);
+        return userRepository.save(user);
     }
 
-    @RequestMapping(
-        value = "/users/{id}/writerquest",
-        method = RequestMethod.PUT,
-        produces = "application/json;charset=UTF-8"
-    )
+    @PutMapping("/{id}/writerquest")
     public User writerQuest(
-        @PathVariable(value = "id") Long id,
-        @RequestBody WriterQuestCommand writerQuestCommand,
-        HttpServletRequest request,
-        HttpServletResponse response
+        @PathVariable Long id,
+        @RequestBody WriterQuestCommand command
     ) throws Exception {
-        System.out.println("##### /user/writerQuest  called #####");
-        Optional<User> optionalUser = userRepository.findById(id);
-
-        optionalUser.orElseThrow(() -> new Exception("No Entity Found"));
-        User user = optionalUser.get();
-        user.writerQuest(writerQuestCommand);
-
-        userRepository.save(user);
-        return user;
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new Exception("No User Found"));
+        user.writerQuest(command);
+        return userRepository.save(user);
     }
 
-    @RequestMapping(
-        value = "/users/{id}/cancelsubscription",
-        method = RequestMethod.PUT,
-        produces = "application/json;charset=UTF-8"
-    )
+    @PutMapping("/{id}/cancelsubscription")
     public User cancelSubscription(
-        @PathVariable(value = "id") Long id,
-        @RequestBody CancelSubscriptionCommand cancelSubscriptionCommand,
-        HttpServletRequest request,
-        HttpServletResponse response
+        @PathVariable Long id,
+        @RequestBody CancelSubscriptionCommand command
     ) throws Exception {
-        System.out.println("##### /user/cancelSubscription  called #####");
-        Optional<User> optionalUser = userRepository.findById(id);
-
-        optionalUser.orElseThrow(() -> new Exception("No Entity Found"));
-        User user = optionalUser.get();
-        user.cancelSubscription(cancelSubscriptionCommand);
-
-        userRepository.save(user);
-        return user;
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new Exception("No User Found"));
+        user.cancelSubscription(command);
+        return userRepository.save(user);
     }
 
-    @RequestMapping(
-        value = "/users/{id}/chargepoint",
-        method = RequestMethod.PUT,
-        produces = "application/json;charset=UTF-8"
-    )
+    @PutMapping("/{id}/chargepoint")
     public User chargePoint(
-        @PathVariable(value = "id") Long id,
-        @RequestBody ChargePointCommand chargePointCommand,
-        HttpServletRequest request,
-        HttpServletResponse response
+        @PathVariable Long id,
+        @RequestBody ChargePointCommand command
     ) throws Exception {
-        System.out.println("##### /user/chargePoint  called #####");
-        Optional<User> optionalUser = userRepository.findById(id);
-
-        optionalUser.orElseThrow(() -> new Exception("No Entity Found"));
-        User user = optionalUser.get();
-        user.chargePoint(chargePointCommand);
-
-        userRepository.save(user);
-        return user;
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new Exception("No User Found"));
+        user.chargePoint(command);
+        return userRepository.save(user);
     }
 }
-//>>> Clean Arch / Inbound Adaptor
