@@ -9,7 +9,8 @@ public class BookViewed extends AbstractEvent {
 
     private Long bookId;
     private Long userId; // ✅ 추가
-
+    private Long writerId;
+    
     public BookViewed(Book aggregate) {
         super(aggregate);
         this.bookId = aggregate.getBookId(); // getter가 있다고 가정

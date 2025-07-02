@@ -7,39 +7,35 @@ import javax.transaction.Transactional;
 import miniproject.domain.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-//<<< Clean Arch / Inbound Adaptor
 
 @RestController
-// @RequestMapping(value="/openAis")
 @Transactional
 public class OpenAiController {
 
     @Autowired
     OpenAiRepository openAiRepository;
 
-    @RequestMapping(
-        value = "/openAis/{id}/bookcovercreate",
-        method = RequestMethod.PUT,
-        produces = "application/json;charset=UTF-8"
-    )
+    @PutMapping("/openAis/{id}/bookcovercreate")
     public OpenAi bookCoverCreate(
-        @PathVariable(value = "id") Long id,
-        @RequestBody BookCoverCreateCommand bookCoverCreateCommand,
-        HttpServletRequest request,
-        HttpServletResponse response
+        @PathVariable("id") Long id,
+        @RequestBody BookCoverCreateCommand command
     ) throws Exception {
-        System.out.println("##### /openAi/bookCoverCreate  called #####");
-        Optional<OpenAi> optionalOpenAi = openAiRepository.findById(id);
+        OpenAi.bookCoverCreate(command);
+        return openAiRepository.findById(id).orElseThrow();
+    }
 
-        optionalOpenAi.orElseThrow(() -> new Exception("No Entity Found"));
-        OpenAi openAi = optionalOpenAi.get();
-        openAi.bookCoverCreate(bookCoverCreateCommand);
-
-        openAiRepository.save(openAi);
+    @PutMapping("/openAis/{id}/select")
+    public OpenAi selectCover(
+        @PathVariable("id") Long id,
+        @RequestBody CoverSelectCommand command
+    ) throws Exception {
+        OpenAi openAi = openAiRepository.findById(id).orElseThrow();
+        openAi.selectCover(command.getSelectedUrl());
         return openAi;
     }
+
+    @GetMapping("/openAis/{id}")
+    public OpenAi getBookCover(@PathVariable Long id) {
+        return openAiRepository.findById(id).orElseThrow();
+    }
 }
-//>>> Clean Arch / Inbound Adaptor

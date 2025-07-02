@@ -22,6 +22,4 @@ public class BookDetailInfo {
     private Long writerId;
     private String writerNickname;
     private String coverUrl;
-    private String writerNickname;
-    private String coverUrl;
 }

@@ -10,12 +10,12 @@ import org.springframework.context.ApplicationContext;
 @SpringBootApplication
 @EnableBinding(KafkaProcessor.class)
 @EnableFeignClients
-public class OpenaiApplication {
+public class OpenAiApplication {
 
     public static ApplicationContext applicationContext;
 
     public static void main(String[] args) {
         applicationContext =
-            SpringApplication.run(OpenaiApplication.class, args);
+            SpringApplication.run(OpenAiApplication.class, args);
     }
 }

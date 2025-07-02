@@ -18,6 +18,10 @@ public class BestSeller {
     private Integer viewCount; // 조회수
     private String selectedStatus; // 베스트셀러 여부
     private Date selectedAt; // 선정일시
+    private String title;
+    private String coverUrl;
+    private Long writerId;
+
 
     public static BestSellerRepository repository() {
         return BestsellerApplication.applicationContext.getBean(BestSellerRepository.class);
@@ -63,5 +67,14 @@ public class BestSeller {
 
     public static void viewCount(BookViewed event) {
         handleEvent(event.getBookId());
+    }
+
+    public void increaseBookView(IncreaseBookViewCommand command) {
+        this.viewCount = this.viewCount == null ? 1 : this.viewCount + 1;
+    }
+
+    public void selectBestSeller(SelectBestSellerCommand command) {
+        BestsellerSelected selected = new BestsellerSelected(this);
+        selected.publishAfterCommit();
     }
 }

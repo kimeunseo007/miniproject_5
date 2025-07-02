@@ -17,5 +17,4 @@ public class PointInfoCheck {
     private Long userId;
 
     private Integer amount;
-    private Integer amount;
 }

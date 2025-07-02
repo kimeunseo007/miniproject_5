@@ -17,6 +17,12 @@ public class Point {
     private Long userId;
 
     private Integer amount;
+    private Long bookId;
+
+    public Long getBookId() {
+        return bookId;
+    }
+
 
     public static PointRepository repository() {
         return PointApplication.applicationContext.getBean(PointRepository.class);

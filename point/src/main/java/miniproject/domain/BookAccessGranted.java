@@ -5,17 +5,18 @@ import miniproject.infra.AbstractEvent;
 
 @Data
 @ToString
-public class CoverCreated extends AbstractEvent {
-    private Long bookId;
-    private String previewUrls;
+public class BookAccessGranted extends AbstractEvent {
 
-    public CoverCreated(OpenAi aggregate) {
+    private Long userId;
+    private Long bookId;
+
+    public BookAccessGranted(Point aggregate) {
         super(aggregate);
+        this.userId = aggregate.getUserId();
         this.bookId = aggregate.getBookId();
-        this.previewUrls = aggregate.getPreviewUrls();
     }
 
-    public CoverCreated() {
+    public BookAccessGranted() {
         super();
     }
 }

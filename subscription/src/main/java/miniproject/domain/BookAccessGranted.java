@@ -8,6 +8,7 @@ import miniproject.infra.AbstractEvent;
 public class BookAccessGranted extends AbstractEvent {
 
     private Long userId;
+    private Long bookId;
 
     public BookAccessGranted(Subscription aggregate) {
         super(aggregate);

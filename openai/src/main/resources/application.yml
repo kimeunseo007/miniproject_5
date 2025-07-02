@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: openai
+  config:
+    import: optional:classpath:application-secret.yml
 ---
 
 spring:
@@ -30,14 +32,10 @@ spring:
       bindings:
         event-in:
           group: openai
-#<<< EDA / Topic Name
           destination: miniproject
-#>>> EDA / Topic Name
           contentType: application/json
         event-out:
-#<<< EDA / Topic Name
           destination: miniproject
-#>>> EDA / Topic Name
           contentType: application/json
 
 logging:
@@ -47,8 +45,7 @@ logging:
 
 api:
   url: 
-    openai: localhost:8087 
-    
+    openai: localhost:8087
 
 server:
   port: 8087
@@ -67,7 +64,7 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: my-kafka:9092
+          brokers: kafka:9092
         streams:
           binder:
             configuration:
@@ -87,6 +84,4 @@ spring:
 
 api:
   url: 
-    openai: openai:8080 
-    
-
+    openai: openai:8080

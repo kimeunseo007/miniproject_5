@@ -1,7 +1,5 @@
 package miniproject.infra;
 
-import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 import miniproject.config.kafka.KafkaProcessor;
 import miniproject.domain.*;
@@ -13,7 +11,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class SubscriptionStatusCheckViewHandler {
 
-    //<<< DDD / CQRS
     @Autowired
     private SubscriptionStatusCheckRepository subscriptionStatusCheckRepository;
 
@@ -24,19 +21,12 @@ public class SubscriptionStatusCheckViewHandler {
         try {
             if (!subscriptionRegistered.validate()) return;
 
-            // view 객체 생성
             SubscriptionStatusCheck subscriptionStatusCheck = new SubscriptionStatusCheck();
-            // view 객체에 이벤트의 Value 를 set 함
-            subscriptionStatusCheck.setUserId(
-                subscriptionRegistered.getUserId()
-            );
-            subscriptionStatusCheck.setSubscriptionStatus(ACTIVE);
+            subscriptionStatusCheck.setUserId(subscriptionRegistered.getUserId());
+            subscriptionStatusCheck.setSubscriptionStatus("ACTIVE");
             subscriptionStatusCheck.setSubscriptionExpireDate(
-                String.valueOf(
-                    subscriptionRegistered.getSubscriptionExpiryDate()
-                )
+                String.valueOf(subscriptionRegistered.getSubscriptionExpiryDate())
             );
-            // view 레파지 토리에 save
             subscriptionStatusCheckRepository.save(subscriptionStatusCheck);
         } catch (Exception e) {
             e.printStackTrace();
@@ -49,21 +39,17 @@ public class SubscriptionStatusCheckViewHandler {
     ) {
         try {
             if (!subscriptionCanceled.validate()) return;
-            // view 객체 조회
-            Optional<SubscriptionStatusCheck> subscriptionStatusCheckOptional = subscriptionStatusCheckRepository.findByUserId(
-                subscriptionCanceled.getUserId()
-            );
+
+            Optional<SubscriptionStatusCheck> subscriptionStatusCheckOptional =
+                subscriptionStatusCheckRepository.findByUserId(subscriptionCanceled.getUserId());
 
             if (subscriptionStatusCheckOptional.isPresent()) {
                 SubscriptionStatusCheck subscriptionStatusCheck = subscriptionStatusCheckOptional.get();
-                // view 객체에 이벤트의 eventDirectValue 를 set 함
-                subscriptionStatusCheck.setSubscriptionStatus(CANCELLED);
-                // view 레파지 토리에 save
+                subscriptionStatusCheck.setSubscriptionStatus("CANCELLED");
                 subscriptionStatusCheckRepository.save(subscriptionStatusCheck);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    //>>> DDD / CQRS
 }

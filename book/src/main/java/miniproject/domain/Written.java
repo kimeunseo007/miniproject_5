@@ -17,8 +17,6 @@ public class Written extends AbstractEvent {
     private Long writerId;
     private String writerNickname;
     private String status;
-    private String writerNickname;
-    private String status;
 
     public Written(Book aggregate) {
         super(aggregate);

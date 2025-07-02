@@ -12,7 +12,7 @@ import miniproject.infra.AbstractEvent;
 public class PointChargeRequested extends AbstractEvent {
 
     private Long userId;
-    private String amount;
+    private Integer amount;
 
     public PointChargeRequested(User aggregate) {
         super(aggregate);

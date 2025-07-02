@@ -17,7 +17,6 @@ public class PublishCompleted extends AbstractEvent {
     private Long writerId;
     private String coverUrl;
     private String writerNickname;
-    private String writerNickname;
 
     public PublishCompleted(Book aggregate) {
         super(aggregate);

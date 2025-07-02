@@ -12,7 +12,10 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PublicationApprovedManagementViewHandler {
-
+    private static final String PENDING = "PENDING";
+    private static final String APPROVED = "APPROVED";
+    private static final String REJECTED = "REJECTED";
+    
     //<<< DDD / CQRS
     @Autowired
     private PublicationApprovedManagementRepository publicationApprovedManagementRepository;

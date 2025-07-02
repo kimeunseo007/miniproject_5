@@ -3,11 +3,10 @@ package miniproject.domain;
 import lombok.Data;
 
 @Data
-public class PointDeducted {
+public class BookAccessGranted {
 
     private Long userId;
-    private Integer amount;
     private Long bookId;
 
-    public PointDeducted() {}
+    public BookAccessGranted() {}
 }

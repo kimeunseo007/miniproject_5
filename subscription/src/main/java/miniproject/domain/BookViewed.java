@@ -10,5 +10,5 @@ import miniproject.infra.AbstractEvent;
 public class BookViewed extends AbstractEvent {
 
     private Long bookId;
-    private Long writerId;
+    private Long userId;
 }

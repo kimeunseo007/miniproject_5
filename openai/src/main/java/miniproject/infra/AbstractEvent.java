@@ -2,7 +2,7 @@ package miniproject.infra;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import miniproject.OpenaiApplication;
+import miniproject.OpenAiApplication;
 import miniproject.config.kafka.KafkaProcessor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.messaging.MessageChannel;
@@ -32,7 +32,7 @@ public class AbstractEvent {
         /**
          * spring streams 방식
          */
-        KafkaProcessor processor = OpenaiApplication.applicationContext.getBean(
+        KafkaProcessor processor = OpenAiApplication.applicationContext.getBean(
             KafkaProcessor.class
         );
         MessageChannel outputChannel = processor.outboundTopic();
