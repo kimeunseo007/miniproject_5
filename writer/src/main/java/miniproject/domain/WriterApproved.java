@@ -7,13 +7,13 @@ import miniproject.infra.AbstractEvent;
 @ToString
 public class WriterApproved extends AbstractEvent {
 
-    private Long writerId;
+    private Long userId;
     private String approvalStatus;
 
     public WriterApproved(Writer aggregate) {
         super(aggregate);
-        this.writerId = aggregate.getWriterId();          // ✅ writerId 설정
-        this.approvalStatus = aggregate.getApprovalStatus();  // ✅ 상태 설정
+        this.userId = aggregate.getUserId();                // ✅ userId로 변경
+        this.approvalStatus = aggregate.getApprovalStatus();
     }
 
     public WriterApproved() {

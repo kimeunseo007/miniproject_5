@@ -1,5 +1,5 @@
 server:
-  port: 8088
+  port: 8080
 
 ---
 
@@ -10,35 +10,35 @@ spring:
 #<<< API Gateway / Routes
       routes:
         - id: book
-          uri: http://localhost:8082
+          uri: http://book:8082
           predicates:
             - Path=/books/**, /bookDetailInfos/**, /bookLists/**
         - id: writer
-          uri: http://localhost:8083
+          uri: http://writer:8083
           predicates:
             - Path=/writers/**, /publicationApprovedManagements/**
         - id: user
-          uri: http://localhost:8084
+          uri: http://user:8084
           predicates:
             - Path=/users/**, /userInfoLists/**
         - id: subscription
-          uri: http://localhost:8085
+          uri: http://subscription:8085
           predicates:
             - Path=/subscriptions/**, /subscriptionStatusChecks/**
         - id: bestseller
-          uri: http://localhost:8086
+          uri: http://bestseller:8086
           predicates:
             - Path=/bestSellers/**, /bestSellerLists/**
         - id: openai
-          uri: http://localhost:8087
+          uri: http://openai:8087
           predicates:
             - Path=/openAis/**, 
         - id: point
-          uri: http://localhost:8088
+          uri: http://point:8088
           predicates:
             - Path=/points/**, /pointInfoChecks/**
         - id: frontend
-          uri: http://localhost:8080
+          uri: http://frontend:8080
           predicates:
             - Path=/**
 #>>> API Gateway / Routes

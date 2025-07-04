@@ -1,7 +1,8 @@
 package miniproject.domain;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
-import miniproject.dto.BookInfoDto;
 
 @Data
 public class PublishRequested {
@@ -9,7 +10,7 @@ public class PublishRequested {
     private Long bookId;
     private String title;
     private Long writerId;
-    private String content;   // 추가
+    private String content;
     private String coverUrl;
 
     public boolean validate() {
@@ -23,10 +24,19 @@ public class PublishRequested {
     public String getCoverUrl() {
         return this.coverUrl;
     }
-    
+
     public PublishRequested(BookInfoDto dto) {
         this.bookId = dto.getBookId();
         this.title = dto.getTitle();
         this.writerId = dto.getWriterId();
+    }
+
+    public String toJson() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("JSON 변환 실패", e);
+        }
     }
 }

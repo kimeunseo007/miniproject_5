@@ -27,6 +27,9 @@ public class Writer {
     private Long writerId;
     private Long userId;
     private Long bookId;
+    private String nickname;
+    private String email;
+
     private String title;
     private String coverUrl;
     private String approvalStatus; // 승인 상태 (APPROVED, REJECTED 등)
@@ -72,6 +75,8 @@ public class Writer {
     public static void writerRequest(WriterRequest event) {
         Writer writer = new Writer();
         writer.setUserId(event.getUserId());
+        writer.setNickname(event.getNickname()); // ✅ 추가
+        writer.setEmail(event.getEmail());
         writer.setApprovalStatus(STATUS_PENDING);          // ← 상수 사용
         writer.setPublishStatus(STATUS_NOT_REQUESTED);     // ← 상수 사용
         repository().save(writer);

@@ -2,9 +2,8 @@ package miniproject.infra;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import javax.naming.NameParser;
-import javax.naming.NameParser;
 import javax.transaction.Transactional;
+
 import miniproject.config.kafka.KafkaProcessor;
 import miniproject.domain.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +11,6 @@ import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
-//<<< Clean Arch / Inbound Adaptor
 @Service
 @Transactional
 public class PolicyHandler {
@@ -21,38 +19,41 @@ public class PolicyHandler {
     WriterRepository writerRepository;
 
     @StreamListener(KafkaProcessor.INPUT)
-    public void whatever(@Payload String eventString) {}
+    public void whatever(@Payload String eventString) {
+        // 기본 디버깅용 수신 로그
+    }
 
     @StreamListener(
         value = KafkaProcessor.INPUT,
         condition = "headers['type']=='WriterRequest'"
     )
-    public void wheneverWriterRequest_WriterRequest(
-        @Payload WriterRequest writerRequest
-    ) {
-        WriterRequest event = writerRequest;
-        System.out.println(
-            "\n\n##### listener WriterRequest : " + writerRequest + "\n\n"
-        );
+    public void handleWriterRequest(@Payload WriterRequest event) {
+        if (!event.validate()) return;
 
-        // Sample Logic //
+        System.out.println("##### listener WriterRequest : " + event.toJson());
+
+        // Writer 생성 및 저장
         Writer.writerRequest(event);
+
+        // WriterRegistered 이벤트 발행
+        WriterRegistered writerRegistered = new WriterRegistered();
+        writerRegistered.setUserId(event.getUserId());
+        writerRegistered.setEmail(event.getEmail());
+        writerRegistered.setNickname(event.getNickname());
+        writerRegistered.publishAfterCommit();
+
     }
 
     @StreamListener(
         value = KafkaProcessor.INPUT,
         condition = "headers['type']=='PublishRequested'"
     )
-    public void wheneverPublishRequested_PublishRequest(
-        @Payload PublishRequested publishRequested
-    ) {
-        PublishRequested event = publishRequested;
-        System.out.println(
-            "\n\n##### listener PublishRequest : " + publishRequested + "\n\n"
-        );
+    public void wheneverPublishRequested_PublishRequest(@Payload PublishRequested publishRequested) {
+        if (!publishRequested.validate()) return;
 
-        // Sample Logic //
-        Writer.publishRequest(event);
+        System.out.println("##### listener PublishRequest : " + publishRequested.toJson());
+
+        // Writer 출간 요청 상태로 변경
+        Writer.publishRequest(publishRequested);
     }
 }
-//>>> Clean Arch / Inbound Adaptor

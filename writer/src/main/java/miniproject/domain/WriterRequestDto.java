@@ -1,4 +1,4 @@
-package miniproject.dto;
+package miniproject.domain;
 
 import lombok.Data;
 

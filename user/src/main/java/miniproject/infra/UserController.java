@@ -1,9 +1,13 @@
 package miniproject.infra;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
+import miniproject.domain.WriterRequestCommand;
 
 import miniproject.domain.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +20,13 @@ public class UserController {
 
     @Autowired
     UserRepository userRepository;
+
+    @GetMapping
+    public List<User> getAllUsers() {
+        Iterable<User> users = userRepository.findAll();
+        return StreamSupport.stream(users.spliterator(), false)
+                            .collect(Collectors.toList());
+    }
 
     // ✅ 회원가입은 POST로 처리
     @PostMapping

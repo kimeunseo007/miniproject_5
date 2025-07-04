@@ -40,15 +40,19 @@ public class User {
 
     // 작가 요청 (승인되기 전까진 isWriter false)
     public void writerQuest(WriterQuestCommand command) {
-        // isWriter = true 는 writer 서비스에서 승인된 후 처리해야 함!
-        WriterRequest event = new WriterRequest(this);
+        WriterRequested event = new WriterRequested(this);
         event.publishAfterCommit();
     }
 
-    // 작가 승인 처리 (writer 서비스에서 승인 이벤트 수신 시)
+    // 🔧 [추가] writerRequest 메서드 (WriterRequestCommand 처리용)
+    public void writerRequest(WriterRequestCommand command) {
+        WriterRequested event = new WriterRequested(this);
+        event.publishAfterCommit();
+    }
+
+    // 작가 승인 처리
     public void approveWriter() {
         this.isWriter = true;
-        // 별도 이벤트 발행은 writer 서비스에서 처리
     }
 
     // 구독 요청
@@ -69,7 +73,7 @@ public class User {
 
     // 포인트 충전 요청
     public void chargePoint(ChargePointCommand command) {
-        this.point += command.getAmount(); // 단순 누적
+        this.point += command.getAmount();
 
         PointChargeRequested event = new PointChargeRequested(this);
         event.publishAfterCommit();

@@ -6,6 +6,8 @@ import java.util.Date;
 import javax.persistence.*;
 import lombok.Data;
 import miniproject.SubscriptionApplication;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Entity
 @Table(name = "Subscription_table")
@@ -24,29 +26,39 @@ public class Subscription {
 
     // 구독 등록
     public void subscriptionRegister(SubscriptionRegisterCommand command) {
-        this.subscriptionStatus = "SUBSCRIBED";
+        this.subscriptionStatus = "SUBSCRIBED";  // 상태를 "SUBSCRIBED"로 설정
         this.subscriptionExpiryDate = Date.from(
-            LocalDate.now().plusDays(30).atStartOfDay(ZoneId.systemDefault()).toInstant()
+            LocalDate.now().plusDays(30).atStartOfDay(ZoneId.systemDefault()).toInstant()  // 만료일을 현재 날짜 + 30일로 설정
         );
 
+        // Subscription 객체를 DB에 저장
+        repository().save(this);
+        repository().flush(); 
+
+        // 구독 등록 이벤트 발행
         SubscriptionRegistered event = new SubscriptionRegistered(this);
-        event.publishAfterCommit();
+        event.publishAfterCommit();  // 이벤트 발행
     }
 
     // 구독 취소
+    @Transactional
     public void subscriptionCancel(SubscriptionCancelCommand command) {
         this.subscriptionStatus = "CANCELED";
         this.subscriptionExpiryDate = Date.from(
             LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()
         );
+        repository().save(this);
+        repository().flush();
 
         SubscriptionCanceled event = new SubscriptionCanceled(this);
         event.publishAfterCommit();
     }
+
     public static void subscriptionCancel(SubscriptionCancelRequested event) {
         repository().findByUserId(event.getUserId()).ifPresent(subscription -> {
             subscription.setSubscriptionStatus("CANCELLED");
             repository().save(subscription);
+            repository().flush();
         });
     }
 

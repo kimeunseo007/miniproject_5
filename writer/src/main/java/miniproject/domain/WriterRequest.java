@@ -1,16 +1,22 @@
 package miniproject.domain;
 
 import lombok.Data;
-import miniproject.dto.WriterRequestDto;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import miniproject.domain.WriterRequestDto;
+import miniproject.infra.AbstractEvent;
 
 @Data
-public class WriterRequest {
+@ToString
+@NoArgsConstructor
+public class WriterRequest extends AbstractEvent {
 
     private Long userId;
     private String email;
     private String nickname;
 
     public WriterRequest(WriterRequestDto dto) {
+        super();
         this.userId = dto.getUserId();
         this.email = dto.getEmail();
         this.nickname = dto.getNickname();
